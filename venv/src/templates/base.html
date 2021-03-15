@@ -1,14 +1,101 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>
-            This is the header
-        </title>
-    </head>
-    <body>
-        <h1>This is the body</h1>
-    </body>
-    <footer>
-        <h1>This is the footer</h1>
-    </footer>
+<!doctype html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css"
+    type="text/css">
+  <style>
+    .map {
+      height: 650px;
+      width: 100%;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/build/ol.js"></script>
+  <title>OpenLayers example</title>
+</head>
+
+<body>
+  <div id="map" class="map"></div>
+  <form class="form-inline">
+    <label for="type">Geometry type: &nbsp;</label>
+    <select class="form-control mr-2 mb-2 mt-2" id="type">
+      <option value="modify">select a feature to modify</option>
+      <option value="Point">Point</option>
+      <option value="LineString">LineString</option>
+      <option value="Polygon">Polygon</option>
+      <option value="Circle">Circle</option>
+      <option value="None">None</option>
+    </select>
+    <input class="form-control mr-2 mb-2 mt-2" type="button" value="Undo" id="undo">
+  </form>
+  <script>
+    var raster = new ol.layer.Tile({
+      source: new ol.source.OSM(),
+    });
+
+    var source = new ol.source.Vector({ wrapX: false });
+
+    var vector = new ol.layer.Vector({
+      source: source,
+    });
+
+    var map = new ol.Map({
+      layers: [raster, vector],
+      target: 'map',
+      view: new ol.View({
+        center: [-11000000, 4600000],
+        zoom: 4,
+      }),
+    });
+
+    var select = new ol.interaction.Select();
+    var snap = new ol.interaction.Snap({
+      source: source,
+    });
+    var modify = new ol.interaction.Modify({
+      source: source
+    })
+    var typeSelect = document.getElementById('type');
+
+    var draw; // global so we can remove it later
+    function addInteraction() {
+      var value = typeSelect.value;
+      if (value !== 'None') {
+        if (value !== 'modify') {
+          draw = new ol.interaction.Draw({
+            source: source,
+            type: typeSelect.value,
+          });
+          map.addInteraction(draw);
+        }
+        if (value === 'modify') {
+          map.addInteraction(select);
+          map.addInteraction(modify);
+          map.addInteraction(snap);
+          
+        }
+
+      }
+    }
+
+    /**
+     * Handle change event.
+     */
+    typeSelect.onchange = function () {
+      map.removeInteraction(draw);
+      map.removeInteraction(modify);
+      map.removeInteraction(select);
+      map.removeInteraction(snap);
+      addInteraction();
+    };
+
+
+    document.getElementById('undo').addEventListener('click', function () {
+      draw.removeLastPoint();
+    });
+
+    addInteraction();
+  </script>
+</body>
+
 </html>
